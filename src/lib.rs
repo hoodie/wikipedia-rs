@@ -601,6 +601,28 @@ impl<'a, A: http::HttpClient> Page<'a, A> {
         Iter::new(&self)
     }
 
+    fn request_langs(&self, cont: &Option<Vec<(String, String)>>) -> Result<(Vec<serde_json::Value>, Option<Vec<(String, String)>>)> {
+        let a: Result<(Vec<serde_json::Value>, _)> = cont!(self, cont, ("prop", "langlinks"));
+
+        a.map(|(pages, cont)| {
+            let page = match pages.into_iter().next() {
+                Some(p) => p,
+                None => return (Vec::new(), None),
+            };
+            (page
+                .as_object()
+                .and_then(|x| x.get("langlinks"))
+                .and_then(|x| x.as_array())
+                .map(|x| x.into_iter().cloned().collect())
+                .unwrap_or(Vec::new()), cont)
+        })
+    }
+
+    /// Creates an iterator to view all available languages of the `Page`.
+    pub fn get_langs(&self) -> Result<Iter<A, iter::Lang>> {
+        Iter::new(&self)
+    }
+
     fn request_categories(&self, cont: &Option<Vec<(String, String)>>) ->
             Result<(Vec<serde_json::Value>, Option<Vec<(String, String)>>)> {
         let a:Result<(Vec<serde_json::Value>, _)> = cont!(self, cont,

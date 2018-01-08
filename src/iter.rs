@@ -150,6 +150,33 @@ impl IterItem for Link {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct Lang {
+    pub lang: String,
+    pub translation: String,
+}
+
+impl IterItem for Lang {
+    fn request_next<A: http::HttpClient>(page: &Page<A>, cont: &Option<Vec<(String, String)>>) -> Result<(Vec<Value>, Option<Vec<(String, String)>>)> {
+        page.request_langs(&cont)
+    }
+
+    fn from_value(value: &Value) -> Option<Lang> {
+        value
+            .as_object()
+            .map(|x| (
+                    x.get("*").and_then(Value::as_str),
+                    x.get("lang").and_then(Value::as_str)
+                    ))
+            .map(|(translation, lang)| {
+                Lang {
+                    lang: lang.unwrap_or("").into(),
+                    translation: translation.unwrap_or("").into(),
+                }
+            })
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Category {
     pub title: String,
 }
